@@ -77,8 +77,8 @@ def mx_quant(
     grp_size: int,
     n_e_exp: int = 2,
     n_e_man: int = 1,
-    n_s_exp: int = 4,
-    n_s_man: int = 3,
+    n_s_exp: int = 5,
+    n_s_man: int = 2,
     dim: int = -1,
     eps: float = 1e-8,
 ) -> Tensor:
@@ -92,7 +92,7 @@ def mx_quant(
         x_grp.abs().amax(-1, keepdim=True) / grid_e[-1],
         grid_s,
     ).clamp_min(eps)
-    x_q = round_grid((x_grp / s).abs().clamp_max(grid_e[-1]), grid_e)
+    x_q = round_grid((x_grp / s).abs(), grid_e)
     x_hat = x_q * s * x_grp.sign()
 
     x_hat = x_hat.reshape(*x_hat.shape[:-2], -1).movedim(-1, dim)
@@ -104,8 +104,8 @@ def mx_quant_ste(
     grp_size: int,
     n_e_exp: int = 2,
     n_e_man: int = 1,
-    n_s_exp: int = 4,
-    n_s_man: int = 3,
+    n_s_exp: int = 5,
+    n_s_man: int = 2,
     dim: int = -1,
     eps: float = 1e-8,
 ) -> Tensor:

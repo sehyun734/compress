@@ -59,7 +59,7 @@ def fwd_mod(mod: nn.Module, acts: Tensor, inps: Inps) -> Tensor:
 def fwd_qkv(
     attn: nn.Module,
     acts: Tensor,
-) -> tuple[Tensor, Tensor, Tensor]:  # (n_batch, n_head, seq_len, d_head)
+) -> tuple[Tensor, Tensor, Tensor]:  # (n_batch, n_head | n_kv_head, seq_len, d_head)
     d_head = attn.head_dim
     return (
         attn.q_proj(acts).float().unflatten(-1, (-1, d_head)).transpose(1, 2),
@@ -86,7 +86,10 @@ def sdpa(
         repeat_kv(v, n_rep),
         attn_mask=mask,
         scale=scale,
-        is_causal=mask is None,
+        # sdpa_mask가 None인 경우는 prefill과 decode.
+        # causal은 prefill에서만 필요 (decode는 query가 하나뿐이라 막을 게 없음)
+        # decode는 반드시 1. seq_len > 1이 prefill
+        is_causal=mask is None and q.shape[-2] > 1,  # 알아서 mask
     )
 
 

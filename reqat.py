@@ -12,6 +12,7 @@ from simple_parsing import parse
 from torch import Tensor
 from torch.optim import AdamW
 from transformers import PreTrainedModel, get_cosine_with_min_lr_schedule_with_warmup
+from transformers.masking_utils import ALL_MASK_ATTENTION_FUNCTIONS, sdpa_mask
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS
 
 from shared.metrics import ppl
@@ -87,7 +88,7 @@ def search_scale(
     n_rep = attn.num_key_value_groups
     d_head = attn.head_dim
 
-    q, k, v = fwd_qkv(attn, acts)  # (n_batch, n_head, seq_len, d_head)
+    q, k, v = fwd_qkv(attn, acts)  # (n_batch, n_head | n_kv_head, seq_len, d_head)
     q_rope, k_rope = apply_rope(q, k, cos, sin)
     v_hat = mx_quant(v, args.grp_size, 1, 2)
     y = sdpa(q_rope, k_rope, v, n_rep)
@@ -169,7 +170,7 @@ def patch(model: PreTrainedModel, args: Args) -> None:
     def fwd_attn(
         attn: nn.Module,
         q: Tensor,
-        k: Tensor,  # (n_batch, seq_len, n_kv_head, d_head)
+        k: Tensor,  # (n_batch, n_kv_head, seq_len, d_head)
         v: Tensor,
         mask: Tensor | None,
         **kw,
@@ -185,6 +186,7 @@ def patch(model: PreTrainedModel, args: Args) -> None:
         lin.forward = MethodType(fwd_lin, lin)
 
     ALL_ATTENTION_FUNCTIONS["qfit"] = fwd_attn
+    ALL_MASK_ATTENTION_FUNCTIONS.register("qfit", sdpa_mask)  # bool 또는 None 형태 mask
     model.config._attn_implementation = "qfit"
 
 
