@@ -48,7 +48,11 @@ def load_calib(
     seed: int,
 ) -> list[Tensor]:
     ds = load_dataset("Salesforce/wikitext", "wikitext-2-raw-v1", split="train")
-    ids = tokenizer("\n\n".join(ds["text"]), return_tensors="pt").input_ids
+    ids = tokenizer(
+        "\n\n".join(ds["text"]),
+        return_tensors="pt",
+        verbose=False,  # seq_len으로 잘라 쓰므로 model_max_length 초과 경고 무의미
+    ).input_ids
     gen = random.Random(seed)
     samples = []
     for _ in range(n_sample):
@@ -62,7 +66,11 @@ def load_eval(
     seq_len: int,
 ) -> list[Tensor]:
     ds = load_dataset("Salesforce/wikitext", "wikitext-2-raw-v1", split="test")
-    ids = tokenizer("\n\n".join(ds["text"]), return_tensors="pt").input_ids
+    ids = tokenizer(
+        "\n\n".join(ds["text"]),
+        return_tensors="pt",
+        verbose=False,  # seq_len으로 잘라 쓰므로 model_max_length 초과 경고 무의미
+    ).input_ids
     n_sample = ids.shape[1] // seq_len
     return [ids[:, i * seq_len : (i + 1) * seq_len] for i in range(n_sample)]
 

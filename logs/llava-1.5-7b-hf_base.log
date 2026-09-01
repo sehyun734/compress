@@ -1,0 +1,6 @@
+seq_len=2048
+vlm=True
+limit=32
+
+pope=0.8125
+gqa=0.5625

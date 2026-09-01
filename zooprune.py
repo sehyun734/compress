@@ -2,7 +2,6 @@ import copy
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from tqdm import tqdm
 import torch
 import torch.nn as nn
 from simple_parsing import parse
@@ -10,15 +9,18 @@ from torch import Tensor
 from transformers import PreTrainedModel
 
 from shared.load import load_vlm
+from shared.metrics import gqa, pope
 from shared.vlm import get_img_id, get_lm, get_proj
+from shared.utils import print_args
 
 
 @dataclass
 class Args:
     model: str = "llava-hf/llava-1.5-7b-hf"
+    limit: int = 32
     n_keep: int = 64
     n_pert: int = 64
-    h: float = 0.01
+    mu: float = 0.01
     seed: int = 42
 
 
@@ -28,7 +30,7 @@ def zo_sens(
     proj: Callable[[Tensor], Tensor],
     n_pert: int,
     seed: int,
-    h: float = 0.01,
+    mu: float,
     eps: float = 1e-8,
 ) -> Tensor:
     """
@@ -37,7 +39,7 @@ def zo_sens(
     """
     gen = torch.Generator(device=x_vis.device).manual_seed(seed)
     sens = torch.zeros(x_vis.shape[:-1], dtype=torch.float32, device=x_vis.device)
-    for _ in tqdm(range(n_pert)):
+    for _ in range(n_pert):
         u = torch.randn(
             x_vis.shape[-1],
             generator=gen,
@@ -45,7 +47,7 @@ def zo_sens(
             device=x_vis.device,
         )
         u_unit = u / u.norm().clamp_min(eps)
-        delta = (proj(x_vis + h * u_unit) - proj(x_vis - h * u_unit)) / (2 * h)
+        delta = (proj(x_vis + mu * u_unit) - proj(x_vis - mu * u_unit)) / (2 * mu)
         sens.add_(delta.norm(dim=-1))
     sens.div_(n_pert)
     return sens
@@ -104,7 +106,7 @@ def zooprune(model: PreTrainedModel, args: Args) -> None:
         nonlocal i_keep
         x_vis = a[0].flatten(0, 1).float()
         x_lang = out.flatten(0, 1).float()
-        sens = zo_sens(x_vis, proj_snap, args.n_pert, args.seed, args.h)
+        sens = zo_sens(x_vis, proj_snap, args.n_pert, args.seed, args.mu)
         i_keep = pick_toks(sens, x_lang, args.n_keep)
 
     def hook_lm(mod: nn.Module, a: tuple, kw: dict) -> tuple[tuple, dict] | None:
@@ -137,10 +139,11 @@ def zooprune(model: PreTrainedModel, args: Args) -> None:
 
 def main():
     args = parse(Args)
-    print(args)
+    print_args(args)
     model, _ = load_vlm(args.model)
     zooprune(model, args)
-    # TODO: 평가
+    print(f"pope={pope(model, args.limit):.4f}")
+    print(f"gqa={gqa(model, args.limit):.4f}")
 
 
 if __name__ == "__main__":

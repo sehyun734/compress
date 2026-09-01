@@ -1,0 +1,8 @@
+limit=32
+n_keep=64
+n_pert=64
+mu=0.01
+seed=42
+
+pope=0.8333
+gqa=0.6250

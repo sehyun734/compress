@@ -1,13 +1,5 @@
-Args(model='meta-llama/Llama-3.2-3B', bit=4, grp_size=128, seq_len=2048)
-Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]
-Fetching 2 files: 100%|██████████| 2/2 [00:18<00:00,  9.47s/it]
-Loading weights:   0%|          | 0/254 [00:00<?, ?it/s]
-Loading weights: 100%|██████████| 254/254 [00:01<00:00, 154.71it/s]
-Generating test split:   0%|          | 0/4358 [00:00<?, ? examples/s]
-Generating test split: 100%|██████████| 4358/4358 [00:00<00:00, 123264.55 examples/s]
-Generating train split:   0%|          | 0/36718 [00:00<?, ? examples/s]
-Generating train split: 100%|██████████| 36718/36718 [00:00<00:00, 806819.19 examples/s]
-Generating validation split:   0%|          | 0/3760 [00:00<?, ? examples/s]
-Generating validation split: 100%|██████████| 3760/3760 [00:00<00:00, 568227.39 examples/s]
-[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (289077 > 131072). Running this sequence through the model will result in indexing errors
+bit=4
+grp_size=128
+seq_len=2048
+
 ppl=8.4922

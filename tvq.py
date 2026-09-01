@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 
-from tqdm import tqdm
 import torch
 from simple_parsing import parse
 from transformers import PreTrainedModel
 
 from shared.load import load_llm
 from shared.quant import quant
+from shared.utils import print_args
 
 
 @dataclass
@@ -31,7 +31,7 @@ def tvq(model: PreTrainedModel, args: Args) -> None:
     theta = dict(model.named_parameters())
     theta_snap = {name: param.data.clone() for name, param in theta.items()}
 
-    for model_ft, _ in tqdm(map(load_llm, args.models_ft), total=len(args.models_ft)):
+    for model_ft, _ in map(load_llm, args.models_ft):
         for name, param_ft in model_ft.named_parameters():
             w = theta_snap[name]
             w_ft = param_ft.data
@@ -44,7 +44,7 @@ def tvq(model: PreTrainedModel, args: Args) -> None:
 
 def main():
     args = parse(Args)
-    print(args)
+    print_args(args)
     model, _ = load_llm(args.model)
     tvq(model, args)
     # TODO: 평가

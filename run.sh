@@ -50,6 +50,7 @@ colab install -s "$session" \
     datasets \
     transformers \
     simple-parsing \
+    lmms-eval decord \
     hqq pymoo scipy
 
 tar czf "$tmp" -C "$root" --no-xattrs --no-mac-metadata \
@@ -68,15 +69,18 @@ EOF
 echo "$log"
 
 colab exec -s "$session" --timeout 86400 <<EOF > "$root/$log"
+import io
 import subprocess
+
 proc = subprocess.Popen(
-    ["bash", "-c", "cd $remote && set -a && [ -f .env ] && . ./.env; set +a; TQDM_MININTERVAL=30 PYTHONPATH=. python -u $entry.py $* 2>&1"],
+    ["bash", "-c", "cd $remote && set -a && [ -f .env ] && . ./.env; set +a; TQDM_DISABLE=1 PYTHONPATH=. python -u $entry.py $* 2>&1"],
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
-    text=True,
 )
-for line in proc.stdout:
-    if line.strip():
+# newline="\n"이면 \n에서만 쪼개져 tqdm 바 하나가 통째로 한 줄이 된다.
+# lmms-eval은 disable을 명시로 넘겨 TQDM_DISABLE이 안 먹어서 여기서 버린다.
+for line in io.TextIOWrapper(proc.stdout, newline="\n"):
+    if "%|" not in line:
         print(line, end="", flush=True)
 if proc.wait():
     raise SystemExit(proc.returncode)

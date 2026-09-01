@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 
-from tqdm import tqdm
 from simple_parsing import parse
 from torch import Tensor, nn
 import torch
@@ -11,6 +10,7 @@ from shared.hooks import catch_blk_inps
 from shared.load import load_calib, load_eval, load_llm
 from shared.modules import Inps, fwd_blk, get_blks, get_lins
 from shared.quant import apply_qparams, calc_qparams
+from shared.utils import print_args
 
 
 @dataclass
@@ -22,9 +22,7 @@ class Args:
     n_calib: int = 128
     seq_len: int = 2048
     r_damp: float = 0.01
-    skip_lins: list[str] = field(
-        default_factory=lambda: ["model.layers.1.mlp.down_proj"]
-    )
+    skip_lins: list[str] = field(default_factory=lambda: ["model.layers.1.mlp.down_proj"])
     seed: int = 42
 
 
@@ -95,7 +93,7 @@ def gptq(model: PreTrainedModel, calib: list[Tensor], args: Args) -> None:
           무튼 1.mlp.down_proj만 skip하면 훨씬 좋아짐.
     """
 
-    for blk_name, blk in tqdm(get_blks(model).items()):
+    for blk_name, blk in get_blks(model).items():
         inps = catch_blk_inps(model, blk, calib)
         for lin_name, lin in get_lins(blk, blk_name).items():
             if lin_name in args.skip_lins:
@@ -107,7 +105,7 @@ def gptq(model: PreTrainedModel, calib: list[Tensor], args: Args) -> None:
 
 def main() -> None:
     args = parse(Args)
-    print(args)
+    print_args(args)
     model, tokenizer = load_llm(args.model)
     calib = load_calib(tokenizer, args.n_calib, args.seq_len, args.seed)
     gptq(model, calib, args)

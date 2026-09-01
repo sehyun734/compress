@@ -4,7 +4,6 @@ from functools import partial
 from types import MethodType
 
 import numpy as np
-from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -20,6 +19,7 @@ from shared.hooks import catch_blk_inps, catch_lin_acts
 from shared.load import load_calib, load_eval, load_llm, load_sft
 from shared.modules import apply_rope, fwd_qkv, get_all_lins, get_blks, get_rope, sdpa
 from shared.quant import mx_quant, mx_quant_ste
+from shared.utils import print_args
 
 
 @dataclass
@@ -60,7 +60,7 @@ def sft(
         n_step,
         min_lr_rate=args.r_lr_min,
     )
-    for i_step in tqdm(range(n_step)):
+    for i_step in range(n_step):
         for toks, labels in samples[
             i_step * args.n_accum : (i_step + 1) * args.n_accum
         ]:
@@ -110,10 +110,7 @@ def search_scale(
     beta_best = 0.0
     for alpha in np.linspace(0.0, 1.0, args.n_grid, endpoint=False):
         q_rope, k_rope = apply_rope(
-            q * (s_q**alpha).unsqueeze(1),
-            k / (s_k**alpha).unsqueeze(1),
-            cos,
-            sin,
+            q * (s_q**alpha).unsqueeze(1), k / (s_k**alpha).unsqueeze(1), cos, sin
         )
         for beta in np.linspace(0.0, 1.0, args.n_grid, endpoint=False):
             k_hat = mx_quant(k_rope - beta * k_mean.unsqueeze(1), args.grp_size, 1, 2)
@@ -227,7 +224,7 @@ def reqat(
 
 def main():
     args = parse(Args)
-    print(args)
+    print_args(args)
     model, tokenizer = load_llm(args.model)
     samples = load_sft(tokenizer, args.n_sft, args.seq_len, args.seed)
     calib = load_calib(tokenizer, args.n_calib, args.seq_len, args.seed)

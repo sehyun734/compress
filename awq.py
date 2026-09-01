@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
 import numpy as np
-from tqdm import tqdm
 import torch
 from simple_parsing import parse
 from torch import Tensor, nn
@@ -12,6 +11,7 @@ from shared.hooks import catch_blk_inps, catch_lin_acts
 from shared.load import load_calib, load_eval, load_llm
 from shared.modules import Inps, fwd_mod, get_absorb_grps, get_blks, get_lins
 from shared.quant import quant
+from shared.utils import print_args
 
 
 @dataclass
@@ -135,7 +135,7 @@ def awq(model: PreTrainedModel, calib: list[Tensor], args: Args) -> None:
 
     또한 s는 prev에 1/s로, 대상 lin에 s로 흡수되어 추론 비용 없음.
     """
-    for blk in tqdm(get_blks(model).values()):
+    for blk in get_blks(model).values():
         inps = catch_blk_inps(model, blk, calib)
         attn = blk.self_attn
         for prev, lins, mod_out in get_absorb_grps(model, blk):
@@ -149,11 +149,7 @@ def awq(model: PreTrainedModel, calib: list[Tensor], args: Args) -> None:
                 if lin is blk.mlp.up_proj or (args.do_vo and lin is attn.v_proj):
                     continue
                 lin.weight.data = quant(
-                    lin.weight.data,
-                    args.bit,
-                    "grp",
-                    -1,
-                    args.grp_size,
+                    lin.weight.data, args.bit, "grp", -1, args.grp_size
                 )
 
             # o_proj은 어느 grp의 lins에도 없어 여기서 처리
@@ -163,33 +159,21 @@ def awq(model: PreTrainedModel, calib: list[Tensor], args: Args) -> None:
                     s = search_scale_vo(attn, acts, inps, args)
                     absorb_vo(attn, s)
                     attn.v_proj.weight.data = quant(
-                        attn.v_proj.weight.data,
-                        args.bit,
-                        "grp",
-                        -1,
-                        args.grp_size,
+                        attn.v_proj.weight.data, args.bit, "grp", -1, args.grp_size
                     )
                 attn.o_proj.weight.data = quant(
-                    attn.o_proj.weight.data,
-                    args.bit,
-                    "grp",
-                    -1,
-                    args.grp_size,
+                    attn.o_proj.weight.data, args.bit, "grp", -1, args.grp_size
                 )
 
             if isinstance(prev, nn.Linear):
                 prev.weight.data = quant(
-                    prev.weight.data,
-                    args.bit,
-                    "grp",
-                    -1,
-                    args.grp_size,
+                    prev.weight.data, args.bit, "grp", -1, args.grp_size
                 )
 
 
 def main() -> None:
     args = parse(Args)
-    print(args)
+    print_args(args)
     model, tokenizer = load_llm(args.model)
     calib = load_calib(tokenizer, args.n_calib, args.seq_len, args.seed)
     awq(model, calib, args)

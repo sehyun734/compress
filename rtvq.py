@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 
-from tqdm import tqdm
 import torch
 from simple_parsing import parse
 from transformers import PreTrainedModel
 
 from shared.load import load_llm
 from shared.quant import quant
+from shared.utils import print_args
 
 
 @dataclass
@@ -54,7 +54,7 @@ def rtvq(model: PreTrainedModel, args: Args) -> None:
         base_hat[name] = quant(base, args.bit_base, "tensor").to(w.dtype)
     del theta_ft_avg
 
-    for model_ft, _ in tqdm(map(load_llm, args.models_ft), total=len(args.models_ft)):
+    for model_ft, _ in map(load_llm, args.models_ft):
         for name, param_ft in model_ft.named_parameters():
             w = theta_snap[name]
             w_ft_avg_hat = w + base_hat[name]
@@ -69,7 +69,7 @@ def rtvq(model: PreTrainedModel, args: Args) -> None:
 
 def main():
     args = parse(Args)
-    print(args)
+    print_args(args)
     model, _ = load_llm(args.model)
     rtvq(model, args)
     # TODO: 평가

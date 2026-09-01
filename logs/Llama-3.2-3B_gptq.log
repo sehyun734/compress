@@ -1,38 +1,10 @@
-Args(model='meta-llama/Llama-3.2-3B', bit=4, grp_size=128, col_blk_size=128, n_calib=128, seq_len=2048, r_damp=0.01, seed=42)
-Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]
-Fetching 2 files: 100%|██████████| 2/2 [00:20<00:00, 10.46s/it]
-Loading weights:   0%|          | 0/254 [00:00<?, ?it/s]
-Loading weights: 100%|██████████| 254/254 [00:01<00:00, 152.16it/s]
-Generating test split:   0%|          | 0/4358 [00:00<?, ? examples/s]
-Generating test split: 100%|██████████| 4358/4358 [00:00<00:00, 136719.97 examples/s]
-Generating train split:   0%|          | 0/36718 [00:00<?, ? examples/s]
-Generating train split: 100%|██████████| 36718/36718 [00:00<00:00, 799564.17 examples/s]
-Generating validation split:   0%|          | 0/3760 [00:00<?, ? examples/s]
-Generating validation split: 100%|██████████| 3760/3760 [00:00<00:00, 595948.42 examples/s]
-[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (2436214 > 131072). Running this sequence through the model will result in indexing errors
-  0%|          | 0/28 [00:00<?, ?it/s]
- 11%|█         | 3/28 [00:34<04:50, 11.61s/it]
- 11%|█         | 3/28 [00:48<04:50, 11.61s/it]
- 21%|██▏       | 6/28 [01:11<04:23, 12.00s/it]
- 21%|██▏       | 6/28 [01:28<04:23, 12.00s/it]
- 32%|███▏      | 9/28 [01:51<03:59, 12.59s/it]
- 32%|███▏      | 9/28 [02:08<03:59, 12.59s/it]
- 43%|████▎     | 12/28 [02:34<03:32, 13.25s/it]
- 43%|████▎     | 12/28 [02:48<03:32, 13.25s/it]
- 50%|█████     | 14/28 [03:04<03:12, 13.76s/it]
- 50%|█████     | 14/28 [03:18<03:12, 13.76s/it]
- 57%|█████▋    | 16/28 [03:36<02:52, 14.34s/it]
- 57%|█████▋    | 16/28 [03:48<02:52, 14.34s/it]
- 64%|██████▍   | 18/28 [04:09<02:29, 14.96s/it]
- 64%|██████▍   | 18/28 [04:20<02:29, 14.96s/it]
- 71%|███████▏  | 20/28 [04:43<02:04, 15.60s/it]
- 71%|███████▏  | 20/28 [04:58<02:04, 15.60s/it]
- 79%|███████▊  | 22/28 [05:19<01:37, 16.27s/it]
- 79%|███████▊  | 22/28 [05:30<01:37, 16.27s/it]
- 86%|████████▌ | 24/28 [05:56<01:07, 16.94s/it]
- 86%|████████▌ | 24/28 [06:08<01:07, 16.94s/it]
- 93%|█████████▎| 26/28 [06:35<00:35, 17.64s/it]
- 93%|█████████▎| 26/28 [06:48<00:35, 17.64s/it]
-100%|██████████| 28/28 [07:14<00:00, 18.31s/it]
-100%|██████████| 28/28 [07:14<00:00, 15.53s/it]
-ppl=28.9289
+bit=4
+grp_size=128
+col_blk_size=128
+n_calib=128
+seq_len=2048
+r_damp=0.01
+skip_lins=['model.layers.1.mlp.down_proj']
+seed=42
+
+ppl=8.1185

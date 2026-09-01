@@ -8,6 +8,7 @@ from transformers import PreTrainedModel
 from shared.hooks import catch_blk_inps, catch_lin_acts
 from shared.load import load_calib, load_llm
 from shared.modules import get_blks, get_lins
+from shared.utils import print_args
 
 
 @dataclass
@@ -72,7 +73,7 @@ def probe_act(model: PreTrainedModel, calib: list[Tensor]) -> None:
 
 def main() -> None:
     args = parse(Args)
-    print(args)
+    print_args(args)
     model, tokenizer = load_llm(args.model)
     calib = load_calib(tokenizer, args.n_calib, args.seq_len, args.seed)
     probe_act(model, calib)

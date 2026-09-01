@@ -8,6 +8,7 @@ from shared.load import load_eval, load_llm
 from shared.metrics import ppl
 from shared.modules import get_all_lins
 from shared.quant import quant
+from shared.utils import print_args
 
 
 @dataclass
@@ -26,7 +27,7 @@ def rtn(model: PreTrainedModel, args: Args) -> None:
 
 def main() -> None:
     args = parse(Args)
-    print(args)
+    print_args(args)
     model, tokenizer = load_llm(args.model)
     rtn(model, args)
     print(f"ppl={ppl(model, load_eval(tokenizer, args.seq_len)):.4f}")
