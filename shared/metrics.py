@@ -23,7 +23,7 @@ def ppl(model: PreTrainedModel, samples: list[Tensor]) -> float:
 
 
 @torch.no_grad()
-def pope(model: PreTrainedModel, limit: int) -> float:
+def pope(model: PreTrainedModel, n_eval: int) -> float:
     cls = model_map[model.config.model_type]
     orig = cls.from_pretrained
     cls.from_pretrained = lambda *a, **kw: model
@@ -39,7 +39,7 @@ def pope(model: PreTrainedModel, limit: int) -> float:
         model=lm,
         tasks=["pope"],
         batch_size=1,
-        limit=limit or None,
+        limit=n_eval or None,
         task_manager=TaskManager(model_name="llava_hf"),
         log_samples=False,
     )
@@ -47,7 +47,7 @@ def pope(model: PreTrainedModel, limit: int) -> float:
 
 
 @torch.no_grad()
-def gqa(model: PreTrainedModel, limit: int = 32) -> float:
+def gqa(model: PreTrainedModel, n_eval: int = 32) -> float:
     cls = model_map[model.config.model_type]
     orig = cls.from_pretrained
     cls.from_pretrained = lambda *a, **kw: model
@@ -63,7 +63,7 @@ def gqa(model: PreTrainedModel, limit: int = 32) -> float:
         model=lm,
         tasks=["gqa"],
         batch_size=1,
-        limit=limit or None,
+        limit=n_eval or None,
         task_manager=TaskManager(model_name="llava_hf"),
         log_samples=False,
     )

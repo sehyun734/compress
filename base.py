@@ -16,7 +16,7 @@ class Args:
     )
     seq_len: int = 2048
     vlm: bool = False
-    limit: int = 32
+    n_eval: int = 32
 
 
 def main() -> None:
@@ -24,8 +24,8 @@ def main() -> None:
     print_args(args)
     if args.vlm:
         model, _ = load_vlm(args.model)
-        print(f"pope={pope(model, args.limit):.4f}")
-        print(f"gqa={gqa(model, args.limit):.4f}")
+        print(f"pope={pope(model, args.n_eval):.4f}")
+        print(f"gqa={gqa(model, args.n_eval):.4f}")
     else:
         model, tokenizer = load_llm(args.model)
         print(f"ppl={ppl(model, load_eval(tokenizer, args.seq_len)):.4f}")

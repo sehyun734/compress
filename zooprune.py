@@ -17,7 +17,7 @@ from shared.utils import print_args
 @dataclass
 class Args:
     model: str = "llava-hf/llava-1.5-7b-hf"
-    limit: int = 32
+    n_eval: int = 32
     n_keep: int = 64
     n_pert: int = 64
     mu: float = 0.01
@@ -142,8 +142,8 @@ def main():
     print_args(args)
     model, _ = load_vlm(args.model)
     zooprune(model, args)
-    print(f"pope={pope(model, args.limit):.4f}")
-    print(f"gqa={gqa(model, args.limit):.4f}")
+    print(f"pope={pope(model, args.n_eval):.4f}")
+    print(f"gqa={gqa(model, args.n_eval):.4f}")
 
 
 if __name__ == "__main__":
