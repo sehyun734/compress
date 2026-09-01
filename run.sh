@@ -8,7 +8,7 @@ entry="${1:-}"
 entry="${entry%.py}"
 if [ -z "$entry" ] || [ ! -f "$root/$entry.py" ]; then
     echo "usage: ./run.sh <entry> [args...]"
-    echo "entry: $(cd "$root" && ls *.py | sed 's/\.py$//' | tr '\n' ' ')"
+    echo "entry: $(cd "$root" && ls *.py probe/*.py | sed 's/\.py$//' | tr '\n' ' ')"
     exit 1
 fi
 shift
@@ -39,7 +39,7 @@ set -- ${args[@]+"${args[@]}"}
 if [ -z "$model" ]; then
     model="$(sed -n 's/^ *model: *str *= *"\(.*\)".*/\1/p' "$root/$entry.py" | head -1)"
 fi
-log="logs/$(basename "${model:-default}")_$entry${tag:+_$tag}.log"
+log="logs/$(basename "${model:-default}")_${entry//\//_}${tag:+_$tag}.log"
 
 mkdir -p "$root/logs"
 colab new -s "$session" --gpu A100
@@ -70,7 +70,7 @@ echo "$log"
 colab exec -s "$session" --timeout 86400 <<EOF > "$root/$log"
 import subprocess
 proc = subprocess.Popen(
-    ["bash", "-c", "cd $remote && set -a && [ -f .env ] && . ./.env; set +a; TQDM_MININTERVAL=30 python -u $entry.py $* 2>&1"],
+    ["bash", "-c", "cd $remote && set -a && [ -f .env ] && . ./.env; set +a; TQDM_MININTERVAL=30 PYTHONPATH=. python -u $entry.py $* 2>&1"],
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
     text=True,

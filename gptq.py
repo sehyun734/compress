@@ -88,11 +88,13 @@ def quant_weight(w: Tensor, H: Tensor, args: Args) -> Tensor:
 @torch.no_grad()
 def gptq(model: PreTrainedModel, calib: list[Tensor], args: Args) -> None:
     """
-    NOTE: Llama-3.2-3B에서 ppl 붕괴. attn sink 때문에
-          layers.1.mlp.down_proj 입력에 거대한 chan 있음.
-          이때 H가 해당 massive act chan에 쏠려 어긋나면서,
-          어긋난 H로 계산된 gptq 보상도 같이 어긋나 오차 폭발.
+    NOTE: Llama-3.2-3B에서 ppl 붕괴.
+          logs/Llama-3.2-3B_probe_act에서 model.layers.1.mlp.down_proj을 보면
+          peak 824, chan max 1.8로 소수 요소만 폭발. (아마 attn sink위한 massive act)
+          이 입력에서 down_proj양자화 오차 엄청나져서 H까지 폭발. 그래서 gptq 보상도 폭발.
+          무튼 1.mlp.down_proj만 skip하면 훨씬 좋아짐.
     """
+
     for blk_name, blk in tqdm(get_blks(model).items()):
         inps = catch_blk_inps(model, blk, calib)
         for lin_name, lin in get_lins(blk, blk_name).items():
